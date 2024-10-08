@@ -1,6 +1,5 @@
 import { produce } from 'immer'
 import { ActionTypes } from "./actions";
-import {  } from 'date-fns/locale';
 
 export interface Cycle {
     id: string;
@@ -50,7 +49,7 @@ export function cyclesReducer(state: CyclesState, action: any) {
 
             return produce(state, draft => {
                 draft.activeCycleId = null
-                draft.cycles[currentCycleIndex].finishedDate = new Date()
+                draft.cycles[currentCycleIndex].interruptedDate = new Date()
             })}
         default:
             return state
