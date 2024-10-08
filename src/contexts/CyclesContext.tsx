@@ -31,26 +31,62 @@ interface CyclesContextProviderProps {
     children: ReactNode
 }
 
+interface CyclesState {
+    cycles: Cycle[]
+    activeCycleId: string | null
+
+}
+
 export function CyclesContextProvider({
-     children, 
-    }: CyclesContextProviderProps) {
-    const [cycles, dispatch] = useReducer((state: Cycle[], action: any) => {
+    children, 
+}: CyclesContextProviderProps) {
+    const [cyclesState, dispatch] = useReducer(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (state: CyclesState, action: any) => {
+            switch(action.type){
+                case 'ADD_NEW_CYCLE':
+                    return {
+                        ...state, 
+                        cycles: [...state.cycles, action.payload.newCycle],
+                        activeCycleId: action.payload.newCycle.id
+                    }
+                case 'INTERROMPER_CICLO':
+                    return {
+                        ...state,
+                        cycles: state.cycles.map((cycle) => {
+                            if (cycle.id === state.activeCycleId) {
+                                return {...cycle, interruptedDate: new Date() }
+                            } else {
+                                return cycle
+                            }
+                        }),
+                        activeCycleId: null,
+                    }
+                case 'FINALIZAR_CICLO':
+                    return {
+                        ...state,
+                        cycles: state.cycles.map((cycle) => {
+                            if (cycle.id === state.activeCycleId) {
+                                return {...cycle, finishedDate: new Date() }
+                            } else {
+                                return cycle
+                            }
+                        }),
+                        activeCycleId: null,
+                    }
+                default:
+                    return state
+            }
+        }, 
+        {
+            cycles: [],
+            activeCycleId: null
+        },
+    )
 
-        console.log(state)
-        console.log(action)
-
-        if (action.type === 'ADD_NEW_CYCLE') {
-            return [...state, action.payload.newCycle]
-        }
-
-        return state
-    }, [] )
-
-
-
-    const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
     const [amountSecondsPassed, setAmountSecondPassed] = useState(0)
 
+    const {cycles, activeCycleId } = cyclesState
     const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
 
     function setSecondsPassed(seconds: number) {
@@ -64,15 +100,6 @@ export function CyclesContextProvider({
                 activeCycleId,
             },
         })
-        // setCycles((state) => 
-        //     state.map((cycle) => {
-        //         if (cycle.id === activeCycleId) {
-        //             return {...cycle, finishedDate: new Date() }
-        //         } else {
-        //             return cycle
-        //         }
-        //     }),
-        // )
     }
 
     function creatNewCycle(data: CreateCycleData) {
@@ -91,9 +118,6 @@ export function CyclesContextProvider({
                 newCycle,
             },
         })
-
-        // setCycles((state) => [...state, newCycle])
-        setActiveCycleId(id)
         setAmountSecondPassed(0)
 
     }
@@ -106,16 +130,6 @@ export function CyclesContextProvider({
                 data: activeCycleId,
             },
         })
-        // setCycles((state) => 
-        //     state.map((cycle) => {
-        //         if (cycle.id === activeCycleId) {
-        //             return {...cycle, interruptedDate: new Date() }
-        //         } else {
-        //             return cycle
-        //         }
-        //     }),
-        // )
-        setActiveCycleId(null)
     }
 
     return (
